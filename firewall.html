@@ -1,0 +1,78 @@
+<DOCTYPE HTML>
+<html>
+<head>
+	<title>
+		Firewall Border Control
+	</title>
+	<meta charset="utf-8">
+</head>
+
+<body>
+
+	Source: <span id="Source"> </span> <br>
+	Destination: <span id="Destination"> </span>  <br>
+	
+	Rules: Allow anyone from <span id ="AllowFrom"> </span> <br>
+	<button type="button" onclick="check('allow')" id="accept">Accept</button> 
+	<button type="button" onclick="check('deny')" id="deny">Deny</button> <br>
+	Score: <span id ="Score"> </span> <br>
+	Lives: <span id ="Lives"> </span> <br>
+	<span id="Message"> </span>
+	
+</body>
+
+
+<script>
+	function randomNumber(len) {
+		var randomNumber;
+		var n = '';
+
+		for(var count = 0; count < len; count++) {
+			randomNumber = Math.floor(Math.random() * 10);
+			n += randomNumber.toString();
+		}
+		return n;
+	}
+	window.onload = function() {
+		document.getElementById("Source").innerHTML = randomNumber(1);
+		document.getElementById("Destination").innerHTML = randomNumber(1);
+		document.getElementById("AllowFrom").innerHTML = randomNumber(1);
+		document.getElementById("Score").innerHTML = 0;
+		document.getElementById("Lives").innerHTML = 3;
+	};
+	
+	function check(button) {
+		var source = document.getElementById("Source").innerHTML;
+		var destination = document.getElementById("Destination").innerHTML;
+		var acceptfrom = document.getElementById("AllowFrom").innerHTML;
+		var score = document.getElementById("Score").innerHTML;
+		if (source == acceptfrom && button == 'allow') {
+			document.getElementById("Message").innerHTML = "God job, that packet was valid!"
+			document.getElementById("Score").innerHTML ++;
+		}
+		else if (source != acceptfrom && button == 'deny') {
+			document.getElementById("Message").innerHTML = "Good job, that packet was from a bad source"
+			document.getElementById("Score").innerHTML ++;
+		}
+		else if (source != acceptfrom && button == 'allow') {
+			document.getElementById("Message").innerHTML = "Wrong, that source was not allowed in!"
+			document.getElementById("Lives").innerHTML --;
+		}
+		else {
+			document.getElementById("Message").innerHTML = "Wrong, that packet should have been allowed in!"
+			document.getElementById("Lives").innerHTML --;
+		}
+		document.getElementById("Source").innerHTML = randomNumber(1);
+		document.getElementById("Destination").innerHTML = randomNumber(1);
+		if (score == 9) {
+			document.getElementById("accept").onclick = stage2check("allow");
+			document.getElementById("deny").onclick = stage2check("deny");
+		}
+	}
+	
+	function stage2check(button) {
+		console.log('worked');
+	}
+</script>
+
+</html>
