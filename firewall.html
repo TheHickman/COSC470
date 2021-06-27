@@ -8,11 +8,15 @@
 </head>
 
 <body>
-
-	Source: <span id="Source"> </span> <br>
-	Destination: <span id="Destination"> </span>  <br>
+	Your IP: <span id="YourIP"></span> <br>
+	Source IP: <span id="SourceIP"></span> <br>
+	Destination IP: <span id="DestinationIP"></span>  <br>
+	Source Port: <span id="SourcePort"></span> <br>
+	Destination Port: <span id="DestinationPort"></span> <br>
 	
-	Rules: Allow anyone from <span id ="AllowFrom"> </span> <br>
+	
+	Rules: Deny packets not meant for us  <br>
+	<span id="Rule2"></span> <span id ="AllowFrom"></span> <br>
 	<button type="button" onclick="check('allow')" id="accept">Accept</button> 
 	<button type="button" onclick="check('deny')" id="deny">Deny</button> <br>
 	Score: <span id ="Score"> </span> <br>
@@ -23,55 +27,115 @@
 
 
 <script>
-	function randomNumber(len) {
-		var randomNumber;
-		var n = '';
-
-		for(var count = 0; count < len; count++) {
-			randomNumber = Math.floor(Math.random() * 10);
-			n += randomNumber.toString();
+	var ipList = []
+	var portList = [23, 80, 443, 20, 21]
+	
+	function chooseIP(score){
+		if (document.getElementById("YourIP").innerHTML.length == 0) {
+			document.getElementById("YourIP").innerHTML = get_random(ipList);
 		}
-		return n;
+		document.getElementById('SourceIP').innerHTML = get_random(ipList);
+		document.getElementById('DestinationIP').innerHTML = get_random(ipList);
+		if (score == 9 && document.getElementById('AllowFrom').innerHTML.length == 0) {
+			document.getElementById("Rule2").innerHTML = "Allow packets from the IP ";
+			document.getElementById("AllowFrom").innerHTML = get_random(ipList);
+		}
 	}
+	
+	function choosePorts(score) {
+		document.getElementById("SourcePort").innerHTML = get_random(portList);
+		document.getElementById("DestinationPort").innerHTML = get_random(portList);
+	}
+	
+	function randomIP() {
+		return (Math.floor(Math.random() * 255) + 1)+"."+(Math.floor(Math.random() * 255))+"."+(Math.floor(Math.random() * 255))+"."+(Math.floor(Math.random() * 255));
+	}
+	
+	function get_random (list) {
+		return list[Math.floor((Math.random()*list.length))];
+	}
+	
 	window.onload = function() {
-		document.getElementById("Source").innerHTML = randomNumber(1);
-		document.getElementById("Destination").innerHTML = randomNumber(1);
-		document.getElementById("AllowFrom").innerHTML = randomNumber(1);
 		document.getElementById("Score").innerHTML = 0;
 		document.getElementById("Lives").innerHTML = 3;
+		let ip1 = randomIP();
+		let ip2 = randomIP();
+		let ip3 = randomIP();
+		ipList.push(ip1);
+		ipList.push(ip2);
+		ipList.push(ip3);
+		chooseIP(0);
+		choosePorts();
 	};
 	
 	function check(button) {
-		var source = document.getElementById("Source").innerHTML;
-		var destination = document.getElementById("Destination").innerHTML;
-		var acceptfrom = document.getElementById("AllowFrom").innerHTML;
+		var flagarray = []
 		var score = document.getElementById("Score").innerHTML;
-		if (source == acceptfrom && button == 'allow') {
-			document.getElementById("Message").innerHTML = "God job, that packet was valid!"
-			document.getElementById("Score").innerHTML ++;
-		}
-		else if (source != acceptfrom && button == 'deny') {
-			document.getElementById("Message").innerHTML = "Good job, that packet was from a bad source"
-			document.getElementById("Score").innerHTML ++;
-		}
-		else if (source != acceptfrom && button == 'allow') {
-			document.getElementById("Message").innerHTML = "Wrong, that source was not allowed in!"
-			document.getElementById("Lives").innerHTML --;
+		flag1 = stage1check(button);
+		if (score >= 10) {
+			flag2 = stage2check(button)
+			if (flag2 == false) {
+				document.getElementById("Lives").innerHTML --;
+			}
+			else if (flag2 == true && flag1 == false) {
+				document.getElementById("Lives").innerHTML --;
+			}
+			else {
+				document.getElementById("Score").innerHTML ++;
+			}
 		}
 		else {
-			document.getElementById("Message").innerHTML = "Wrong, that packet should have been allowed in!"
-			document.getElementById("Lives").innerHTML --;
+			if (flag1 == false) {
+				document.getElementById("Lives").innerHTML --;
+			}
+			else {
+				document.getElementById("Score").innerHTML ++;
+			}
 		}
-		document.getElementById("Source").innerHTML = randomNumber(1);
-		document.getElementById("Destination").innerHTML = randomNumber(1);
-		if (score == 9) {
-			document.getElementById("accept").onclick = stage2check("allow");
-			document.getElementById("deny").onclick = stage2check("deny");
+		chooseIP(score);
+		choosePorts();
+	}
+	
+	function stage1check(button) {
+		var ourIP = document.getElementById("YourIP").innerHTML;
+		var destination = document.getElementById("DestinationIP").innerHTML;
+		if (ourIP == destination && button == 'allow') {
+			document.getElementById("Message").innerHTML = "God job, that packet was for us";
+			return true;
+		}
+		else if (ourIP != destination && button == 'deny') {
+			document.getElementById("Message").innerHTML = "Good job, that packet was not for us";
+			return true;
+		}
+		else if (ourIP != destination && button == 'allow') {
+			document.getElementById("Message").innerHTML = "Wrong, that packet was not for us";
+			return false;
+		}
+		else {
+			document.getElementById("Message").innerHTML = "Wrong, that packet was for us";
+			return false;
 		}
 	}
 	
 	function stage2check(button) {
-		console.log('worked');
+		var source = document.getElementById('SourceIP').innerHTML;
+		var allow = document.getElementById("AllowFrom").innerHTML;
+		if (source == allow && button == 'allow') {
+			document.getElementById("Message").innerHTML = "God job, that packet is from a valid source";
+			return true;
+		}
+		else if (source != allow && button == 'deny') {
+			document.getElementById("Message").innerHTML = "Good job, that packet was not from a valid source";
+			return true;
+		}
+		else if (source != allow && button == 'allow') {
+			document.getElementById("Message").innerHTML = "Wrong, that packet was not from a valid source";
+			return false;
+		}
+		else {
+			document.getElementById("Message").innerHTML = "Wrong, that packet was from a valid source";
+			return false;
+		}
 	}
 </script>
 
