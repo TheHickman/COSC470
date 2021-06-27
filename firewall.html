@@ -27,18 +27,19 @@
 
 
 <script>
-	var ipList = []
-	var portList = [23, 80, 443, 20, 21]
+	var SourceIPList = [];
+	var DestIPList = [];
+	var portList = [23, 80, 443, 20, 21];
 	
 	function chooseIP(score){
 		if (document.getElementById("YourIP").innerHTML.length == 0) {
-			document.getElementById("YourIP").innerHTML = get_random(ipList);
+			document.getElementById("YourIP").innerHTML = get_random(DestIPList);
 		}
-		document.getElementById('SourceIP').innerHTML = get_random(ipList);
-		document.getElementById('DestinationIP').innerHTML = get_random(ipList);
+		document.getElementById('SourceIP').innerHTML = get_random(SourceIPList);
+		document.getElementById('DestinationIP').innerHTML = get_random(DestIPList);
 		if (score == 9 && document.getElementById('AllowFrom').innerHTML.length == 0) {
 			document.getElementById("Rule2").innerHTML = "Allow packets from the IP ";
-			document.getElementById("AllowFrom").innerHTML = get_random(ipList);
+			document.getElementById("AllowFrom").innerHTML = get_random(SourceIPList);
 		}
 	}
 	
@@ -61,59 +62,86 @@
 		let ip1 = randomIP();
 		let ip2 = randomIP();
 		let ip3 = randomIP();
-		ipList.push(ip1);
-		ipList.push(ip2);
-		ipList.push(ip3);
+		let ip4 = randomIP();
+		let ip5 = randomIP();
+		let ip6 = randomIP();
+		DestIPList.push(ip1);
+		DestIPList.push(ip2);
+		DestIPList.push(ip3);
+		SourceIPList.push(ip4);
+		SourceIPList.push(ip5);
+		SourceIPList.push(ip6);
 		chooseIP(0);
 		choosePorts();
 	};
 	
 	function check(button) {
 		var flagarray = []
-		var score = document.getElementById("Score").innerHTML;
+		var current_score = document.getElementById("Score").innerHTML;
+		var new_score = document.getElementById("Score").innerHTML;
 		flag1 = stage1check(button);
-		if (score >= 10) {
+		if (current_score >= 10) {
 			flag2 = stage2check(button)
-			if (flag2 == false) {
+			if (flag1 == 0)  { //Meant for us, and let in
+				if (flag2 == 0 || flag2 == 1) { //Done right thing based on source 
+					document.getElementById("Message").innerHTML = "Correct";
+					new_score ++;
+				}
+				else if (flag2 == 2 || flag2 == 3) { //Done wrong thing based on source
+					document.getElementById("Message").innerHTML = "Is this a source we let in?";
+					document.getElementById("Lives").innerHTML --;
+				}
+			}
+			else if (flag1 == 1) { //Not for us, not let in
+				document.getElementById("Message").innerHTML = "Correct";
+				new_score ++;
+			}
+			else if (flag1 == 2) { //Not meant for us, let in 
+				document.getElementById("Message").innerHTML = "Was this packet meants for us?"
 				document.getElementById("Lives").innerHTML --;
 			}
-			else if (flag2 == true && flag1 == false) {
-				document.getElementById("Lives").innerHTML --;
-			}
-			else {
-				document.getElementById("Score").innerHTML ++;
+			else { //Meant for us, not let in
+				if (flag2 == 1) { //Source wasn't valid, so don't let in
+					document.getElementById("Message").innerHTML = "Correct";
+					new_score ++;
+				}
+				else { //Source was either valid or dealt with incorrectly
+					document.getElementById("Message").innerHTML = "Check the source and destination and try again";
+					document.getElementById("Lives").innerHTML --;
+				}
 			}
 		}
 		else {
-			if (flag1 == false) {
+			if (flag1 == 2 || flag1 == 3) {
+				document.getElementById("Message").innerHTML = "Is the destination the same as our IP?";
 				document.getElementById("Lives").innerHTML --;
 			}
-			else {
-				document.getElementById("Score").innerHTML ++;
+			else {	
+				document.getElementById("Message").innerHTML = "Correct!";
+				new_score ++
 			}
 		}
-		chooseIP(score);
-		choosePorts();
+		if (current_score != new_score) {
+			document.getElementById("Score").innerHTML = new_score;
+			chooseIP(current_score);
+			choosePorts();
+		}
 	}
 	
 	function stage1check(button) {
 		var ourIP = document.getElementById("YourIP").innerHTML;
 		var destination = document.getElementById("DestinationIP").innerHTML;
 		if (ourIP == destination && button == 'allow') {
-			document.getElementById("Message").innerHTML = "God job, that packet was for us";
-			return true;
+			return 0;
 		}
 		else if (ourIP != destination && button == 'deny') {
-			document.getElementById("Message").innerHTML = "Good job, that packet was not for us";
-			return true;
+			return 1;
 		}
 		else if (ourIP != destination && button == 'allow') {
-			document.getElementById("Message").innerHTML = "Wrong, that packet was not for us";
-			return false;
+			return 2;
 		}
 		else {
-			document.getElementById("Message").innerHTML = "Wrong, that packet was for us";
-			return false;
+			return 3;
 		}
 	}
 	
@@ -121,20 +149,16 @@
 		var source = document.getElementById('SourceIP').innerHTML;
 		var allow = document.getElementById("AllowFrom").innerHTML;
 		if (source == allow && button == 'allow') {
-			document.getElementById("Message").innerHTML = "God job, that packet is from a valid source";
-			return true;
+			return 0;
 		}
 		else if (source != allow && button == 'deny') {
-			document.getElementById("Message").innerHTML = "Good job, that packet was not from a valid source";
-			return true;
+			return 1;
 		}
 		else if (source != allow && button == 'allow') {
-			document.getElementById("Message").innerHTML = "Wrong, that packet was not from a valid source";
-			return false;
+			return 2;
 		}
 		else {
-			document.getElementById("Message").innerHTML = "Wrong, that packet was from a valid source";
-			return false;
+			return 3;
 		}
 	}
 </script>
